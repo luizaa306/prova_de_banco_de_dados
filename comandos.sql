@@ -85,7 +85,9 @@ VALUES
 ('Julia Souza', '45677890123', 'julias@gmail.com'),
 ('Rafael Oliveira', '56788901234', 'rafaelo@gmail.com');
 
-INSERT INTO passagens (voo_id, passageiro_id, assento, classe, valor)
+
+INSERT INTO passagens
+(voo_id, passageiro_id, assento, classe, valor)
 VALUES
 (1, 1, '12A', 'Executiva', 950.00),
 (1, 2, '15B', 'Econômica', 420.00),
@@ -93,3 +95,72 @@ VALUES
 (3, 4, '18C', 'Econômica', 350.00),
 (5, 5, '20D', 'Econômica', 500.00);
 
+
+SELECT
+    voos.numero_voo,
+    voos.origem,
+    voos.destino,
+    aeronaves.modelo,
+    pilotos.nome AS piloto
+FROM voos
+JOIN aeronaves
+ON voos.aeronave_id = aeronaves.id
+JOIN pilotos
+ON voos.piloto_id = pilotos.id
+WHERE voos.status IN ('Agendado', 'Em Voo');
+
+
+SELECT
+    classe,
+    SUM(valor) AS total_arrecadado
+FROM passagens
+GROUP BY classe;
+
+
+SELECT
+    passageiros.nome AS passageiro,
+    voos.numero_voo,
+    passagens.assento,
+    passagens.valor
+FROM passagens
+JOIN passageiros
+ON passagens.passageiro_id = passageiros.id
+JOIN voos
+ON passagens.voo_id = voos.id
+WHERE passagens.classe = 'Executiva'
+AND passagens.valor > 800
+ORDER BY passagens.valor DESC;
+
+
+CREATE VIEW vw_painel_aeroporto AS
+SELECT
+    voos.numero_voo,
+    voos.data_hora,
+    voos.origem,
+    voos.destino,
+    aeronaves.modelo,
+    aeronaves.codigo_cauda,
+    voos.status
+FROM voos
+JOIN aeronaves
+ON voos.aeronave_id = aeronaves.id;
+
+SELECT * FROM vw_painel_aeroporto;
+
+
+CREATE VIEW vw_faturamento_por_voo AS
+SELECT
+    voos.id AS voo_id,
+    voos.numero_voo,
+    voos.destino,
+    COUNT(passagens.id) AS total_passageiros,
+    COALESCE(SUM(passagens.valor), 0) AS receita_total
+FROM voos
+LEFT JOIN passagens
+ON voos.id = passagens.voo_id
+GROUP BY
+    voos.id,
+    voos.numero_voo,
+    voos.destino;
+
+SELECT * FROM vw_faturamento_por_voo;
